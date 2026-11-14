@@ -1,0 +1,632 @@
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ page import="com.examora.model.User" %>
+<%@ page import="com.examora.model.ArenaSession" %>
+<%@ page import="com.examora.model.ArenaParticipant" %>
+<%@ page import="com.examora.model.Question" %>
+<%@ page import="com.examora.util.ValidationUtil" %>
+<%@ page import="java.util.List" %>
+<%
+    User currentUser = (User) session.getAttribute("user");
+    if (currentUser == null) {
+        response.sendRedirect("../LoginServlet");
+        return;
+    }
+
+    ArenaSession arenaSession = (ArenaSession) request.getAttribute("arenaSession");
+    ArenaParticipant participant = (ArenaParticipant) request.getAttribute("participant");
+    Question currentQuestion = (Question) request.getAttribute("currentQuestion");
+    List<ArenaParticipant> leaderboard = (List<ArenaParticipant>) request.getAttribute("leaderboard");
+%>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arena - Exatuy</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="../assets/css/style.css" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" type="image/svg+xml" href="../assets/img/favicon.svg?v=3">
+    <style>
+        .arena-timer {
+            font-size: 3rem;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+        }
+        .arena-timer.warning {
+            color: var(--danger-color);
+            animation: pulse 0.5s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .option-btn {
+            transition: all 0.2s ease;
+        }
+        .option-btn:hover:not(:disabled) {
+            transform: translateX(5px);
+            border-color: var(--primary-color);
+        }
+        .option-btn.selected {
+            background-color: rgba(67, 97, 238, 0.1);
+            border-color: var(--primary-color);
+        }
+        .option-btn.correct {
+            background-color: rgba(6, 214, 160, 0.2);
+            border-color: var(--success-color);
+        }
+        .option-btn.incorrect {
+            background-color: rgba(239, 71, 111, 0.2);
+            border-color: var(--danger-color);
+        }
+        .option-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        /* Winner Rank Styles */
+        .rank-1 { background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%) !important; }
+        .rank-2 { background: linear-gradient(135deg, #C0C0C0 0%, #A0A0A0 100%) !important; }
+        .rank-3 { background: linear-gradient(135deg, #CD7F32 0%, #8B4513 100%) !important; }
+        .rank-4 { background: linear-gradient(135deg, #4361ee 0%, #3f37c9 100%) !important; }
+        .rank-5 { background: linear-gradient(135deg, #06d6a0 0%, #05a87e 100%) !important; }
+
+        .winner-item {
+            color: white !important;
+        }
+        .winner-item .badge-rank {
+            background: rgba(255,255,255,0.3) !important;
+            color: white !important;
+        }
+        .winner-item small {
+            color: rgba(255,255,255,0.8) !important;
+        }
+
+        /* Leaderboard Animation */
+        .leaderboard-item {
+            transition: all 0.5s ease;
+        }
+        .leaderboard-item.rank-up {
+            animation: slideUp 0.5s ease;
+        }
+        @keyframes slideUp {
+            0% { transform: translateY(20px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Score Animation */
+        .score-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4rem;
+            font-weight: bold;
+            color: #06d6a0;
+            text-shadow: 0 0 20px rgba(6, 214, 160, 0.5);
+            animation: scorePopup 1.5s ease-out forwards;
+            z-index: 9999;
+        }
+        @keyframes scorePopup {
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+        }
+
+        .score-zero {
+            color: #ef476f;
+            text-shadow: 0 0 20px rgba(239, 71, 111, 0.5);
+        }
+
+        /* Trophy icon for top 3 */
+        .trophy-icon {
+            font-size: 1.2rem;
+            margin-right: 5px;
+        }
+        .trophy-gold { color: #FFD700; }
+        .trophy-silver { color: #C0C0C0; }
+        .trophy-bronze { color: #CD7F32; }
+    </style>
+<link href="../assets/css/handdrawn.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <!-- Top Bar -->
+    <nav class="navbar navbar-dark bg-arena-gradient sticky-top">
+        <div class="container-fluid">
+            <div class="d-flex align-items-center text-white">
+                <i class="bi bi-trophy me-2"></i>
+                <span class="fw-bold">Arena</span>
+                <span class="badge bg-light text-dark ms-3"><%= arenaSession.getCode() %></span>
+            </div>
+            <div class="d-flex align-items-center">
+                <div class="text-white me-4 text-end">
+                    <small>Skor Anda</small>
+                    <div class="fw-bold fs-5" id="myScore"><%= participant.getScore() %> pts</div>
+                </div>
+                <span class="text-white">
+                    <i class="bi bi-person-circle me-1"></i><%= ValidationUtil.sanitizeHtml(currentUser.getName()) %>
+                </span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Main Content - Question Area -->
+            <div class="col-lg-8 py-4">
+                <!-- Timer and Progress -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-4 text-center">
+                                <div class="arena-timer text-arena" id="timer"><%= arenaSession.getQuestionTime() %></div>
+                                <small class="text-muted">detik tersisa</small>
+                            </div>
+                            <div class="col-md-8">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Soal <span id="currentQuestionNum"><%= arenaSession.getCurrentQuestion() + 1 %></span> dari <span id="totalQuestions"><%= arenaSession.getTotalQuestions() %></span></span>
+                                </div>
+                                <div class="progress" style="height: 10px;">
+                                    <div class="progress-bar bg-arena" role="progressbar" id="progressBar"
+                                         style="width: <%= (arenaSession.getCurrentQuestion() + 1) * 100 / arenaSession.getTotalQuestions() %>%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Question Card -->
+                <div class="card shadow-sm" id="questionCard">
+                    <div class="card-header bg-arena-gradient text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-question-circle me-2"></i>
+                            Pertanyaan
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="questionText" class="fs-5 mb-4">
+                            <%= currentQuestion != null && currentQuestion.getQuestionText() != null ? ValidationUtil.sanitizeHtml(currentQuestion.getQuestionText()) : "Memuat soal..." %>
+                        </div>
+
+                        <div id="optionsContainer">
+                            <% if (currentQuestion != null) {
+                                String optA = currentQuestion.getOptionA() != null ? currentQuestion.getOptionA() : "-";
+                                String optB = currentQuestion.getOptionB() != null ? currentQuestion.getOptionB() : "-";
+                                String optC = currentQuestion.getOptionC() != null ? currentQuestion.getOptionC() : "-";
+                                String optD = currentQuestion.getOptionD() != null ? currentQuestion.getOptionD() : "-";
+                            %>
+                            <button type="button" class="btn btn-outline-secondary btn-lg w-100 text-start option-btn mb-3"
+                                    data-option="A" onclick="selectAnswer('A')">
+                                <span class="badge bg-secondary me-3">A</span>
+                                <%= ValidationUtil.sanitizeHtml(optA) %>
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-lg w-100 text-start option-btn mb-3"
+                                    data-option="B" onclick="selectAnswer('B')">
+                                <span class="badge bg-secondary me-3">B</span>
+                                <%= ValidationUtil.sanitizeHtml(optB) %>
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-lg w-100 text-start option-btn mb-3"
+                                    data-option="C" onclick="selectAnswer('C')">
+                                <span class="badge bg-secondary me-3">C</span>
+                                <%= ValidationUtil.sanitizeHtml(optC) %>
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-lg w-100 text-start option-btn"
+                                    data-option="D" onclick="selectAnswer('D')">
+                                <span class="badge bg-secondary me-3">D</span>
+                                <%= ValidationUtil.sanitizeHtml(optD) %>
+                            </button>
+                            <% } else { %>
+                            <div class="text-center py-4">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="mt-3 text-muted">Memuat soal...</p>
+                            </div>
+                            <% } %>
+                        </div>
+
+                        <!-- Feedback Area -->
+                        <div id="feedbackArea" class="mt-4" style="display: none;">
+                            <div id="feedbackContent"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar - Leaderboard -->
+            <div class="col-lg-4 py-4">
+                <div class="card sticky-top" style="top: 80px;">
+                    <div class="card-header bg-arena-gradient text-white">
+                        <h5 class="mb-0"><i class="bi bi-trophy me-2"></i>Leaderboard</h5>
+                    </div>
+                    <div class="card-body p-0" style="max-height: calc(100vh - 150px); overflow-y: auto;">
+                        <div id="leaderboardList" class="list-group list-group-flush">
+                            <% if (leaderboard != null && !leaderboard.isEmpty()) {
+                                int rank = 1;
+                                for (ArenaParticipant p : leaderboard) {
+                                    String rankClass = rank <= 5 ? "rank-" + rank + " winner-item" : "";
+                                    String trophyIcon = rank == 1 ? "<i class='bi bi-trophy-fill trophy-icon trophy-gold'></i>" :
+                                                       rank == 2 ? "<i class='bi bi-trophy-fill trophy-icon trophy-silver'></i>" :
+                                                       rank == 3 ? "<i class='bi bi-trophy-fill trophy-icon trophy-bronze'></i>" : "";
+                            %>
+                            <div class="list-group-item d-flex justify-content-between align-items-center leaderboard-item <%= rankClass %> <%= p.getUserId() == currentUser.getId() ? "border-primary border-2" : "" %>" data-rank="<%= rank %>">
+                                <div class="d-flex align-items-center">
+                                    <span class="badge <%= rank <= 5 ? "badge-rank" : rank == 1 ? "bg-warning text-dark" : rank == 2 ? "bg-secondary" : rank == 3 ? "bg-danger" : "bg-light text-dark border" %> me-3"
+                                          style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;">
+                                        <%= rank %>
+                                    </span>
+                                    <div>
+                                        <div class="fw-bold">
+                                            <%= trophyIcon %><%= ValidationUtil.sanitizeHtml(p.getUserName()) %>
+                                            <% if (p.getUserId() == currentUser.getId()) { %>
+                                            <span class="badge bg-primary ms-1">Anda</span>
+                                            <% } %>
+                                        </div>
+                                        <% if (rank <= 5) { %>
+                                        <small><%= rank == 1 ? "Juara 1" : rank == 2 ? "Juara 2" : rank == 3 ? "Juara 3" : rank == 4 ? "Top 4" : "Top 5" %></small>
+                                        <% } %>
+                                    </div>
+                                </div>
+                                <span class="badge <%= rank <= 5 ? "bg-white text-dark" : "bg-arena" %> fs-6"><%= p.getScore() %> pts</span>
+                            </div>
+                            <% rank++;
+                                }
+                            } %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const sessionId = <%= arenaSession.getId() %>;
+        const participantId = <%= participant.getId() %>;
+        const userId = <%= currentUser.getId() %>;
+        const userName = <%= new com.google.gson.Gson().toJson(currentUser.getName()) %>;
+        const contextPath = '<%= request.getContextPath() %>';
+        const questionTime = <%= arenaSession.getQuestionTime() %>;
+
+        let websocket;
+        let timer;
+        let timeRemaining = questionTime;
+        let currentQuestionIndex = <%= arenaSession.getCurrentQuestion() %>;
+        let totalQuestions = <%= arenaSession.getTotalQuestions() %>;
+        let myScore = <%= participant.getScore() %>;
+        let hasAnswered = false;
+        let questionStartTime = Date.now();
+        let timerRunning = false;
+        let currentQuestionId = <%= currentQuestion != null ? currentQuestion.getId() : 0 %>;
+
+        function initWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = protocol + '//' + window.location.host + contextPath + '/arena/' + sessionId;
+
+            websocket = new WebSocket(wsUrl);
+
+            websocket.onopen = function() {
+                console.log('WebSocket connected');
+                websocket.send(JSON.stringify({
+                    type: 'join',
+                    participantId: participantId,
+                    userId: userId,
+                    userName: userName
+                }));
+                startTimer();
+            };
+
+            websocket.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                handleWebSocketMessage(data);
+            };
+
+            websocket.onclose = function() {
+                console.log('WebSocket disconnected');
+                setTimeout(initWebSocket, 3000);
+            };
+
+            websocket.onerror = function(error) {
+                console.error('WebSocket error:', error);
+            };
+        }
+
+        function handleWebSocketMessage(data) {
+            console.log('Received:', data);
+
+            switch(data.type) {
+                case 'question':
+                    loadNewQuestion(data);
+                    break;
+                case 'leaderboard':
+                    updateLeaderboard(data.data);
+                    break;
+                case 'answerConfirmed':
+                    showAnswerFeedback(data);
+                    break;
+                case 'sessionEnded':
+                    window.location.href = '../ArenaServlet?action=result&id=' + sessionId;
+                    break;
+                case 'sessionPaused':
+                    pauseTimer();
+                    break;
+                case 'sessionResumed':
+                    resumeTimer();
+                    break;
+            }
+        }
+
+        function startTimer() {
+            if (timerRunning) return;
+            timerRunning = true;
+            timeRemaining = questionTime;
+            questionStartTime = Date.now();
+            hasAnswered = false;
+            updateTimerDisplay();
+
+            timer = setInterval(function() {
+                timeRemaining--;
+                updateTimerDisplay();
+
+                if (timeRemaining <= 0) {
+                    timeRemaining = 0;
+                    clearInterval(timer);
+                    timerRunning = false;
+                    timeUp();
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const timerEl = document.getElementById('timer');
+            timerEl.textContent = Math.max(0, timeRemaining);
+
+            if (timeRemaining <= 5 && timeRemaining > 0) {
+                timerEl.classList.add('warning');
+            } else {
+                timerEl.classList.remove('warning');
+            }
+        }
+
+        function pauseTimer() {
+            if (timer) {
+                clearInterval(timer);
+                timerRunning = false;
+            }
+        }
+
+        function resumeTimer() {
+            startTimer();
+        }
+
+        function timeUp() {
+            if (!hasAnswered) {
+                hasAnswered = true;
+                disableOptions();
+                showFeedback(false, null, 0);
+                showScorePopup(0);
+            }
+        }
+
+        function selectAnswer(answer) {
+            if (hasAnswered) return;
+
+            hasAnswered = true;
+            clearInterval(timer);
+            timerRunning = false;
+
+            const timeTaken = Date.now() - questionStartTime;
+
+            // Highlight selected
+            document.querySelectorAll('.option-btn').forEach(btn => {
+                btn.classList.remove('selected');
+                if (btn.dataset.option === answer) {
+                    btn.classList.add('selected');
+                }
+            });
+
+            disableOptions();
+
+            // Send answer to server
+            websocket.send(JSON.stringify({
+                type: 'answer',
+                sessionId: sessionId,
+                participantId: participantId,
+                questionId: currentQuestionId,
+                answer: answer,
+                timeTaken: timeTaken
+            }));
+        }
+
+        function disableOptions() {
+            document.querySelectorAll('.option-btn').forEach(btn => {
+                btn.disabled = true;
+            });
+        }
+
+        function showAnswerFeedback(data) {
+            const isCorrect = data.isCorrect;
+            const correctAnswer = data.correctAnswer;
+            const scoreEarned = data.scoreEarned != null ? data.scoreEarned : 0;
+
+            // Update my score
+            myScore += scoreEarned;
+            animateScore(myScore);
+
+            // Show correct/incorrect
+            document.querySelectorAll('.option-btn').forEach(btn => {
+                if (btn.dataset.option === correctAnswer) {
+                    btn.classList.add('correct');
+                } else if (btn.classList.contains('selected') && !isCorrect) {
+                    btn.classList.add('incorrect');
+                }
+            });
+
+            showFeedback(isCorrect, correctAnswer, scoreEarned);
+            showScorePopup(scoreEarned);
+        }
+
+        function showScorePopup(score) {
+            const popup = document.createElement('div');
+            const scoreValue = score != null ? score : 0;
+            popup.className = 'score-popup' + (scoreValue === 0 ? ' score-zero' : '');
+            popup.textContent = scoreValue > 0 ? '+' + scoreValue : '0';
+            document.body.appendChild(popup);
+
+            setTimeout(() => {
+                popup.remove();
+            }, 1500);
+        }
+
+        function animateScore(newScore) {
+            const scoreEl = document.getElementById('myScore');
+            scoreEl.style.transition = 'transform 0.3s ease';
+            scoreEl.style.transform = 'scale(1.2)';
+            scoreEl.textContent = newScore + ' pts';
+
+            setTimeout(() => {
+                scoreEl.style.transform = 'scale(1)';
+            }, 300);
+        }
+
+        function showFeedback(isCorrect, correctAnswer, scoreEarned) {
+            const feedbackArea = document.getElementById('feedbackArea');
+            const feedbackContent = document.getElementById('feedbackContent');
+
+            const scoreDisplay = scoreEarned != null ? scoreEarned : 0;
+            const correctDisplay = correctAnswer || '-';
+
+            let html = '';
+            if (isCorrect) {
+                html = `
+                    <div class="alert alert-success mb-0">
+                        <h5 class="alert-heading"><i class="bi bi-check-circle me-2"></i>Benar!</h5>
+                        <p class="mb-0">Anda mendapatkan <strong>+${scoreDisplay} poin</strong></p>
+                    </div>
+                `;
+            } else {
+                html = `
+                    <div class="alert alert-danger mb-0">
+                        <h5 class="alert-heading"><i class="bi bi-x-circle me-2"></i>Salah!</h5>
+                        <p class="mb-0">Jawaban benar: <strong>${correctDisplay}</strong></p>
+                    </div>
+                `;
+            }
+
+            feedbackContent.innerHTML = html;
+            feedbackArea.style.display = 'block';
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function loadNewQuestion(data) {
+            currentQuestionIndex = data.questionIndex;
+            const question = data.data;
+
+            // IMPORTANT: Update currentQuestionId for answer submission
+            if (question.id) {
+                currentQuestionId = question.id;
+            }
+
+            // Update UI
+            document.getElementById('currentQuestionNum').textContent = currentQuestionIndex + 1;
+            document.getElementById('progressBar').style.width = ((currentQuestionIndex + 1) * 100 / totalQuestions) + '%';
+            document.getElementById('questionText').textContent = question.questionText || 'Loading...';
+
+            // Update options with proper escaping
+            const optA = escapeHtml(question.optionA);
+            const optB = escapeHtml(question.optionB);
+            const optC = escapeHtml(question.optionC);
+            const optD = escapeHtml(question.optionD);
+
+            const optionsHtml = `
+                <button type="button" class="btn btn-outline-secondary btn-lg w-100 text-start option-btn mb-3"
+                        data-option="A" onclick="selectAnswer('A')">
+                    <span class="badge bg-secondary me-3">A</span>${optA}
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-lg w-100 text-start option-btn mb-3"
+                        data-option="B" onclick="selectAnswer('B')">
+                    <span class="badge bg-secondary me-3">B</span>${optB}
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-lg w-100 text-start option-btn mb-3"
+                        data-option="C" onclick="selectAnswer('C')">
+                    <span class="badge bg-secondary me-3">C</span>${optC}
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-lg w-100 text-start option-btn"
+                        data-option="D" onclick="selectAnswer('D')">
+                    <span class="badge bg-secondary me-3">D</span>${optD}
+                </button>
+            `;
+            document.getElementById('optionsContainer').innerHTML = optionsHtml;
+            document.getElementById('feedbackArea').style.display = 'none';
+
+            // Reset state
+            hasAnswered = false;
+            timerRunning = false;
+            startTimer();
+        }
+
+        function updateLeaderboard(participants) {
+            if (!participants || participants.length === 0) return;
+
+            let html = '';
+            participants.forEach((p, index) => {
+                const rank = index + 1;
+                const rankClass = rank <= 5 ? 'rank-' + rank + ' winner-item' : '';
+                const badgeClass = rank <= 5 ? 'badge-rank' :
+                                   rank === 1 ? 'bg-warning text-dark' :
+                                   rank === 2 ? 'bg-secondary' :
+                                   rank === 3 ? 'bg-danger' : 'bg-light text-dark border';
+                const isMe = p.userId === userId;
+                const rowClass = isMe ? 'border-primary border-2' : '';
+                const displayName = escapeHtml(p.userName || p.user_name || 'Unknown');
+
+                let trophyIcon = rank === 1 ? "<i class='bi bi-trophy-fill trophy-icon trophy-gold'></i>" :
+                                 rank === 2 ? "<i class='bi bi-trophy-fill trophy-icon trophy-silver'></i>" :
+                                 rank === 3 ? "<i class='bi bi-trophy-fill trophy-icon trophy-bronze'></i>" : '';
+
+                let rankLabel = rank <= 5 ?
+                    '<small>' + (rank === 1 ? 'Juara 1' : rank === 2 ? 'Juara 2' : rank === 3 ? 'Juara 3' : rank === 4 ? 'Top 4' : 'Top 5') + '</small>' : '';
+
+                html += `
+                    <div class="list-group-item d-flex justify-content-between align-items-center leaderboard-item ${rankClass} ${rowClass}" data-rank="${rank}">
+                        <div class="d-flex align-items-center">
+                            <span class="badge ${badgeClass} me-3" style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;">
+                                ${rank}
+                            </span>
+                            <div>
+                                <div class="fw-bold">
+                                    ${trophyIcon}${displayName}
+                                    ${isMe ? '<span class="badge bg-primary ms-1">Anda</span>' : ''}
+                                </div>
+                                ${rankLabel}
+                            </div>
+                        </div>
+                        <span class="badge ${rank <= 5 ? 'bg-white text-dark' : 'bg-arena'} fs-6">${p.score != null ? p.score : 0} pts</span>
+                    </div>
+                `;
+
+                // Update my score if it's me
+                if (isMe) {
+                    myScore = p.score || 0;
+                    document.getElementById('myScore').textContent = myScore + ' pts';
+                }
+            });
+
+            document.getElementById('leaderboardList').innerHTML = html;
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            initWebSocket();
+        });
+    </script>
+</body>
+</html>

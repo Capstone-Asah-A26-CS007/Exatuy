@@ -1,0 +1,54 @@
+# ==============================================================================
+# EXATUY ASSESSMENT PLATFORM — SYSTEM & PACKAGE REQUIREMENTS
+# ==============================================================================
+# Project: Exatuy (Adu Pintar Tanpa Ribet / Examora Platform)
+# Main Stack: Java 11+ / Jakarta EE 10 / Tomcat 10 / MySQL 8.0 / Maven
+# Ops & Tooling: Python 3.9+ for deployment, maintenance, and hashing scripts
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. SYSTEM & RUNTIME REQUIREMENTS (Prerequisites)
+# ------------------------------------------------------------------------------
+# - Java Development Kit (JDK): 11 or higher (OpenJDK 11 / 17 / 21)
+# - Build Tool: Apache Maven 3.8+
+# - Web Application Server: Apache Tomcat 10.1+ (Jakarta EE 10 support)
+# - Database Server: MySQL 8.0+ / MariaDB 10.6+
+# - Container Runtime: Docker 20.10+ & Docker Compose v2+
+# - Operating System: Linux (Ubuntu 20.04/22.04 LTS / Debian 11/12)
+# - Scripting Runtime: Python 3.9+
+# ------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
+# 2. PYTHON UTILITIES DEPENDENCIES (pip install -r requirements.txt)
+# Used for operational tasks, password hashing, verification, and API checks.
+# ------------------------------------------------------------------------------
+
+# BCrypt password hashing (compatible with jBCrypt in Java backend)
+bcrypt>=4.0.1,<5.0
+
+# Password hashing verification and CLI tooling
+passlib[bcrypt]>=1.7.4
+
+# HTTP requests for endpoint healthchecks and automated deployments
+requests>=2.31.0
+
+# MySQL connector for database inspection and quick ops scripts
+pymysql>=1.1.0
+
+# ------------------------------------------------------------------------------
+# 3. JAVA BACKEND DEPENDENCIES (Managed via pom.xml)
+# Included for reference — compiled automatically by Maven:
+# ------------------------------------------------------------------------------
+# - jakarta.servlet:jakarta.servlet-api:6.0.0
+# - jakarta.servlet.jsp:jakarta.servlet.jsp-api:3.1.0
+# - com.mysql:mysql-connector-j:8.2.0
+# - org.glassfish.web:jakarta.servlet.jsp.jstl:3.0.1
+# - org.mindrot:jbcrypt:0.4
+# - com.google.code.gson:gson:2.10.1
+# - org.apache.commons:commons-lang3:3.14.0
+# - org.apache.commons:commons-csv:1.10.0
+# - com.zaxxer:HikariCP:5.1.0
+# - com.itextpdf:itextpdf:5.5.13.3
+# - com.sun.mail:jakarta.mail:2.0.1
+# - jakarta.websocket:jakarta.websocket-api:2.1.0
+# ==============================================================================

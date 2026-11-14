@@ -1,0 +1,29 @@
+# ===== Secrets (JANGAN pernah di-commit) =====
+.env
+.env.*
+!.env.example
+claude_code_zai_env.sh
+
+# ===== Build artifacts =====
+target/
+*.war
+*.class
+*.jar
+!lib/*.jar
+
+# ===== Database dumps & backups (besar + berisi data user) =====
+backups/
+backup-db/
+*.sql.gz
+*.tar.gz
+
+# ===== Runtime uploads (file user) =====
+uploads/
+
+# ===== Logs & temp =====
+*.log
+logs/
+*.bak
+*.bak-*
+*.tmp
+.DS_Store

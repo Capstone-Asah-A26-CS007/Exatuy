@@ -1,0 +1,10 @@
+# Ignore backup directories
+backups/
+backups_temp/
+
+# Ignore common build artifacts
+target/
+# *.war files ignored except the main app
+target/*.war
+!examora.war
+*.class

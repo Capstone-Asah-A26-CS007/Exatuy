@@ -1,0 +1,24 @@
+{
+  "name": "Exatuy - Secure Assessment Platform",
+  "short_name": "Exatuy",
+  "description": "Platform Ujian Online dengan fitur lengkap untuk kebutuhan asesmen modern",
+  "icons": [
+    {
+      "src": "/assets/img/logo-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/img/logo-square.svg",
+      "sizes": "200x200",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "theme_color": "#667eea",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "start_url": "/",
+  "scope": "/"
+}

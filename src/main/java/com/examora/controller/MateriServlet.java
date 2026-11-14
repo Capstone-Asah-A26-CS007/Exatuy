@@ -1,0 +1,303 @@
+package com.examora.controller;
+
+import com.examora.dao.MaterialCategoryDAO;
+import com.examora.dao.MaterialDAO;
+import com.examora.model.Material;
+import com.examora.model.MaterialCategory;
+import com.examora.model.User;
+import com.examora.util.ValidationUtil;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.MultipartConfig;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.*;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.*;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.UUID;
+
+@WebServlet("/MateriServlet")
+@MultipartConfig(fileSizeThreshold = 10 * 1024 * 1024, maxFileSize = 50 * 1024 * 1024, maxRequestSize = 100 * 1024 * 1024)
+public class MateriServlet extends HttpServlet {
+    private MaterialCategoryDAO categoryDAO;
+    private MaterialDAO materialDAO;
+
+    @Override
+    public void init() throws ServletException {
+        categoryDAO = new MaterialCategoryDAO();
+        materialDAO = new MaterialDAO();
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        User currentUser = (User) request.getSession().getAttribute("user");
+        String action = request.getParameter("action");
+
+        // Show to anyone logged in
+        if (currentUser == null) {
+            response.sendRedirect("../LoginServlet");
+            return;
+        }
+
+        boolean isAdmin = "admin".equals(currentUser.getRole()) || "owner".equals(currentUser.getRole()) || "pengajar".equals(currentUser.getRole());
+
+        try {
+            if ("list".equals(action) || action == null) {
+                showList(request, response, currentUser, isAdmin);
+            } else if ("adminList".equals(action)) {
+                showAdminList(request, response);
+            } else if ("view".equals(action)) {
+                int id = Integer.parseInt(request.getParameter("id"));
+                Material mat = materialDAO.findById(id);
+                if (mat != null && mat.getIsActive()) {
+                    materialDAO.incrementViewCount(id);
+                    request.setAttribute("material", mat);
+                    request.getRequestDispatcher("/user/materi-view.jsp").forward(request, response);
+                } else {
+                    response.sendError(HttpServletResponse.SC_NOT_FOUND);
+                }
+            } else if ("download".equals(action)) {
+                int id = Integer.parseInt(request.getParameter("id"));
+                Material mat = materialDAO.findById(id);
+                if (mat != null && mat.getIsActive() && mat.getFilePath() != null) {
+                    materialDAO.logDownload(id, currentUser.getId());
+                    String path = getServletContext().getRealPath("/uploads/materials/" + mat.getFilePath());
+                    File file = new File(path);
+                    if (file.exists()) {
+                        response.setContentType(getContentType(mat.getFileType()));
+                        response.setHeader("Content-Disposition", "attachment; filename=\"" + mat.getTitle() + "." + mat.getFileType() + "\"");
+                        Files.copy(file.toPath(), response.getOutputStream());
+                        response.getOutputStream().flush();
+                    } else {
+                        request.setAttribute("error", "File tidak ditemukan");
+                        showList(request, response, currentUser, isAdmin);
+                    }
+                }
+            } else {
+                showList(request, response, currentUser, isAdmin);
+            }
+        } catch (Exception e) {
+            request.setAttribute("error", "Error: " + e.getMessage());
+            try {
+                showList(request, response, currentUser, isAdmin);
+            } catch (Exception ex) {
+                throw new ServletException(ex);
+            }
+        }
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        User currentUser = (User) request.getSession().getAttribute("user");
+        if (currentUser == null) {
+            response.sendRedirect("../LoginServlet");
+            return;
+        }
+        boolean isAdmin = "admin".equals(currentUser.getRole()) || "owner".equals(currentUser.getRole()) || "pengajar".equals(currentUser.getRole());
+        if (!isAdmin) {
+            response.sendRedirect("../LoginServlet");
+            return;
+        }
+
+        String action = request.getParameter("action");
+        try {
+            if ("create".equals(action)) {
+                createMaterial(request, response, currentUser);
+            } else if ("update".equals(action)) {
+                updateMaterial(request, response, currentUser);
+            } else if ("delete".equals(action)) {
+                int id = Integer.parseInt(request.getParameter("id"));
+                materialDAO.delete(id);
+                request.getSession().setAttribute("flashSuccess", "Materi berhasil dihapus");
+                response.sendRedirect("../MateriServlet?action=adminList");
+            } else if ("generate".equals(action)) {
+                generateMaterial(request, response, currentUser);
+            } else {
+                response.sendRedirect("../MateriServlet?action=adminList");
+            }
+        } catch (Exception e) {
+            request.getSession().setAttribute("flashError", "Error: " + e.getMessage());
+            response.sendRedirect("../MateriServlet?action=adminList");
+        }
+    }
+
+    private void showList(HttpServletRequest request, HttpServletResponse response, User user, boolean isAdmin)
+            throws ServletException, IOException, SQLException {
+        String tag = user.getTag();
+        List<Material> materials;
+        if (tag != null && !tag.trim().isEmpty()) {
+            materials = materialDAO.findByTag(tag.trim());
+        } else {
+            materials = materialDAO.findAll();
+        }
+        List<MaterialCategory> categories = categoryDAO.findAll();
+        request.setAttribute("materials", materials);
+        request.setAttribute("categories", categories);
+        request.setAttribute("isAdmin", isAdmin);
+        request.setAttribute("userTag", tag);
+        request.getRequestDispatcher(isAdmin ? "/admin/materi-admin.jsp" : "/user/materi-list.jsp").forward(request, response);
+    }
+
+    private void showAdminList(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException, SQLException {
+        List<Material> materials = materialDAO.findAll();
+        List<MaterialCategory> categories = categoryDAO.findAll();
+        request.setAttribute("materials", materials);
+        request.setAttribute("categories", categories);
+        request.getRequestDispatcher("/admin/materi-admin.jsp").forward(request, response);
+    }
+
+    private void createMaterial(HttpServletRequest request, HttpServletResponse response, User user)
+            throws IOException, ServletException, SQLException {
+        int categoryId = Integer.parseInt(request.getParameter("category_id"));
+        String title = request.getParameter("title");
+        String summary = request.getParameter("summary");
+        String targetTags = request.getParameter("target_tags");
+        String fileType = request.getParameter("file_type");
+        String content = request.getParameter("content");
+
+        Material material = new Material();
+        material.setCategoryId(categoryId);
+        material.setTitle(title);
+        material.setSummary(summary);
+        material.setTargetTags(targetTags);
+        material.setFileType(fileType);
+        material.setContent(content);
+        material.setIsActive(true);
+        material.setIsGenerated(false);
+        material.setGeneratedById(user.getId());
+
+        // Handle file upload
+        Part filePart = request.getPart("file");
+        if (filePart != null && filePart.getSize() > 0) {
+            String fileName = UUID.randomUUID().toString() + "." + getFileExtension(filePart);
+            String uploadPath = getServletContext().getRealPath("/uploads/materials");
+            Files.createDirectories(Paths.get(uploadPath));
+            filePart.write(uploadPath + "/" + fileName);
+            material.setFilePath(fileName);
+            material.setFileSize(filePart.getSize());
+        }
+
+        materialDAO.create(material);
+        request.getSession().setAttribute("flashSuccess", "Materi berhasil ditambahkan");
+        response.sendRedirect("../MateriServlet?action=adminList");
+    }
+
+    private void updateMaterial(HttpServletRequest request, HttpServletResponse response, User user)
+            throws IOException, ServletException, SQLException {
+        int id = Integer.parseInt(request.getParameter("id"));
+        String title = request.getParameter("title");
+        String summary = request.getParameter("summary");
+        String targetTags = request.getParameter("target_tags");
+        String content = request.getParameter("content");
+
+        Material material = materialDAO.findById(id);
+        if (material != null) {
+            material.setTitle(title);
+            material.setSummary(summary);
+            material.setTargetTags(targetTags);
+            material.setContent(content);
+            materialDAO.update(material);
+            request.getSession().setAttribute("flashSuccess", "Materi berhasil diupdate");
+        }
+        response.sendRedirect("../MateriServlet?action=adminList");
+    }
+
+    private void generateMaterial(HttpServletRequest request, HttpServletResponse response, User user)
+            throws ServletException, IOException, SQLException {
+        int categoryId = Integer.parseInt(request.getParameter("category_id"));
+        String jenjang = request.getParameter("jenjang");
+        String mataPelajaran = request.getParameter("mata_pelajaran");
+
+        MaterialCategory category = categoryDAO.findById(categoryId);
+        if (category == null) {
+            request.getSession().setAttribute("flashError", "Kategori tidak ditemukan");
+            response.sendRedirect("../MateriServlet?action=adminList");
+            return;
+        }
+
+        // Generate template content
+        String content = generateSyllabusTemplate(category.getNama(), jenjang, mataPelajaran);
+
+        Material material = new Material();
+        material.setCategoryId(categoryId);
+        material.setTitle("Silabus " + category.getNama());
+        material.setContent(content);
+        material.setSummary("Silabus otomatis untuk " + category.getNama() + " (" + jenjang + ")");
+        material.setFileType("text");
+        material.setTargetTags(null);
+        material.setIsGenerated(true);
+        material.setGeneratedById(user.getId());
+        materialDAO.create(material);
+
+        request.getSession().setAttribute("flashSuccess", "Silabus berhasil digenerate!");
+        response.sendRedirect("../MateriServlet?action=adminList");
+    }
+
+    private String generateSyllabusTemplate(String categoryName, String jenjang, String mataPelajaran) {
+        return "SILABUS " + categoryName.toUpperCase() + "\n" +
+               "=".repeat(50) + "\n\n" +
+               "Jenjang: " + jenjang + "\n" +
+               "Mata Pelajaran: " + mataPelajaran + "\n\n" +
+               "A. KOMPETENSI AWAL\n" +
+               "- Siswa mampu memahami konsep dasar " + mataPelajaran.toLowerCase() + "\n" +
+               "- Siswa mampu menerapkan pengetahuan dalam soal-soal\n\n" +
+               "B. KOMPETENSI INTI\n" +
+               "- KI-1: Menghargai dan menghayati ajaran agama yang dianutnya\n" +
+               "- KI-2: Menunjukkan perilaku jujur, disiplin, tanggung jawab\n" +
+               "- KI-3: Memahami dan menerapkan pengetahuan faktual dan konseptual\n" +
+               "- KI-4: Mengolah, menalar, dan menyaji dalam ranah konkret\n\n" +
+               "C. KOMPETENSI DASAR & MATERI\n" +
+               "1. Pertemuan 1-4: Pengantar dan konsep dasar\n" +
+               "   - Mendengarkan penjelasan materi\n" +
+               "   - Diskusi kelompok\n" +
+               "   - Latihan soal dasar\n\n" +
+               "2. Pertemuan 5-8: Pembahasan topik utama\n" +
+               "   - Pemodelan masalah\n" +
+               "   - Solusi terstruktur\n" +
+               "   - Pre-test dan post-test\n\n" +
+               "3. Pertemuan 9-12: Review dan evaluasi\n" +
+               "   - Summary materi\n" +
+               "   - Try-out / simulasi ujian\n" +
+               "   - Review jawaban\n\n" +
+               "D. PENILAIAN\n" +
+               "- Pre-test: 20%\n" +
+               "- Post-test: 30%\n" +
+               "- Tugas: 20%\n" +
+               "- Ujian Akhir: 30%\n\n" +
+               "E. INDIKATOR KETUNTASAN\n" +
+               "- Minimal 70% untuk kategori LULUS\n" +
+               "- Remedial bagi yang mendapat nilai < 70\n" +
+               "- Pengayaan bagi yang mendapat nilai > 85\n";
+    }
+
+    private String getFileExtension(Part part) {
+        String contentDisp = part.getHeader("content-disposition");
+        if (contentDisp != null) {
+            String[] tokens = contentDisp.split(";");
+            for (String token : tokens) {
+                if (token.trim().startsWith("filename")) {
+                    String fileName = token.substring(token.indexOf('=') + 1).trim().replace("\"", "");
+                    int dotIndex = fileName.lastIndexOf('.');
+                    return dotIndex >= 0 ? fileName.substring(dotIndex + 1).toLowerCase() : "pdf";
+                }
+            }
+        }
+        return "pdf";
+    }
+
+    private String getContentType(String fileType) {
+        switch (fileType) {
+            case "pdf": return "application/pdf";
+            case "doc": return "application/msword";
+            case "docx": return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+            case "image": return "image/jpeg";
+            default: return "application/octet-stream";
+        }
+    }
+}

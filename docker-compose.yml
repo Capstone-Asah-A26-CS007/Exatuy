@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: examora-mysql
+    restart: unless-stopped
+    environment:
+      TZ: Asia/Jakarta
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      # Base schema, then the full data dump (runs last so it wins)
+      - ./sql/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./sql/add_arena_and_notifications.sql:/docker-entrypoint-initdb.d/02-arena-notifications.sql:ro
+      - ./backups/examora_db_full_20260617_141639.sql:/docker-entrypoint-initdb.d/03-full-dump.sql:ro
+    command: --max_allowed_packet=1073741824 --sql_mode=STRICT_TRANS_TABLES,NO_ZERO_DATE,NO_ZERO_IN_DATE,ERROR_FOR_DIVISION_BY_ZERO
+    networks:
+      - examora-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  # Tomcat Application Server
+  tomcat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: examora-tomcat
+    restart: unless-stopped
+    ports:
+      - "8888:8080"
+    environment:
+      - TZ=Asia/Jakarta
+      - DB_URL=jdbc:mysql://mysql:3306/examora_db?useSSL=false&serverTimezone=Asia/Jakarta&allowPublicKeyRetrieval=true
+      - DB_USERNAME=examora_app
+      - DB_PASSWORD=${MYSQL_PASSWORD}
+      - CATALINA_OPTS=-Dorg.apache.catalina.connector.Response.DEFAULT_CHARSET=UTF-8 -Dorg.apache.coyote.http11.DefaultCharset=UTF-8
+    volumes:
+      - ./uploads:/app/uploads:rw
+      - ./tomcat-conf/server.xml:/usr/local/tomcat/conf/server.xml:ro
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - examora-network
+
+volumes:
+  mysql_data:
+
+networks:
+  examora-network:
+    driver: bridge

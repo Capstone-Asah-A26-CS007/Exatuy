@@ -1,0 +1,332 @@
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ page import="com.examora.model.User" %>
+<%@ page import="com.examora.model.Submission" %>
+<%@ page import="com.examora.dao.SettingsDAO" %>
+<%@ page import="com.examora.service.ChatService" %>
+<%@ page import="com.examora.util.ValidationUtil" %>
+<%@ page import="java.util.List" %>
+<%@ page import="java.time.ZoneId" %>
+<%@ page import="java.time.format.DateTimeFormatter" %>
+<%
+    User currentUser = (User) session.getAttribute("user");
+    if (currentUser == null) {
+        response.sendRedirect("../LoginServlet");
+        return;
+    }
+    List<Submission> submissions = (List<Submission>) request.getAttribute("submissions");
+    String error = (String) request.getAttribute("error");
+    String gdriveLink = currentUser.getGdriveLink() != null ? currentUser.getGdriveLink().trim() : "";
+    boolean hasSafeGdriveLink = gdriveLink.startsWith("https://drive.google.com/") || gdriveLink.startsWith("https://docs.google.com/");
+
+    // Check if chat is enabled
+    boolean chatEnabled = new SettingsDAO().isChatEnabled();
+
+    // Check if file management is enabled
+    boolean fileManagementEnabled = new SettingsDAO().isFileManagementEnabled();
+
+    // Get unread chat count
+    int chatUnreadCount = 0;
+    if (chatEnabled) {
+        try {
+            chatUnreadCount = new ChatService().getUnreadCountForUser(currentUser.getId());
+        } catch (Exception e) {
+            // Ignore errors
+        }
+    }
+
+    ZoneId jakartaZone = ZoneId.of("Asia/Jakarta");
+    DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd MMM yyyy").withZone(jakartaZone);
+%>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Riwayat Ujian - Exatuy</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="../assets/css/style.css" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" type="image/svg+xml" href="../assets/img/favicon.svg?v=3">
+<link href="../assets/css/handdrawn.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-md navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="../ExamServlet?action=dashboard">
+                <i class="bi bi-journal-check me-2"></i>Exatuy
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../ExamServlet?action=dashboard">
+                            <i class="bi bi-house me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="../ExamServlet?action=list">
+                            <i class="bi bi-journal-text me-1"></i>Quiz Tersedia
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="../AttendanceServlet?action=view">
+                            <i class="bi bi-check2-square me-1"></i>Absensi
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="../ExamServlet?action=history">
+                            <i class="bi bi-clock-history me-1"></i>Riwayat
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="../TranscriptServlet?action=mine">
+                            <i class="bi bi-card-list me-1"></i>Transcript Nilai
+                        </a>
+                    </li>
+                    <% if (fileManagementEnabled) { %>
+                    <li class="nav-item">
+                        <a class="nav-link" href="../FileManagementServlet?action=list">
+                            <i class="bi bi-folder me-1"></i>Files
+                        </a>
+                    </li>
+                    <% } %>
+                    <% if (chatEnabled) { %>
+                    <li class="nav-item">
+                        <a class="nav-link" href="../ChatServlet">
+                            <i class="bi bi-chat-dots me-1"></i>Chat
+                            <% if (chatUnreadCount > 0) { %>
+                            <span class="badge bg-danger"><%= chatUnreadCount %></span>
+                            <% } %>
+                        </a>
+                    </li>
+                    <% } %>
+                    <% if (hasSafeGdriveLink) { %>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#gdriveModal">
+                            <i class="bi bi-google me-1"></i>Google Drive
+                        </a>
+                    </li>
+                    <% } %>
+                    <%@ include file="custom-menu-items.jspf" %>
+                </ul>
+                <%-- Mobile: Profile menu items shown in nav list --%>
+                    <li class="nav-item d-md-none">
+                        <hr class="my-2 border-light">
+                    </li>
+                    <li class="nav-item d-md-none">
+                        <div class="d-flex align-items-center text-white py-2">
+                            <i class="bi bi-person-circle me-2 fs-5"></i>
+                            <span><%= ValidationUtil.sanitizeHtml(currentUser.getName()) %></span>
+                        </div>
+                    </li>
+                    <li class="nav-item d-md-none">
+                        <a class="nav-link" href="../ProfileServlet">
+                            <i class="bi bi-person me-2"></i>Profil Saya
+                        </a>
+                    </li>
+                    <li class="nav-item d-md-none">
+                        <a class="nav-link" href="../LogoutServlet">
+                            <i class="bi bi-box-arrow-left me-2"></i>Logout
+                        </a>
+                    </li>
+                </ul>
+                <%-- Desktop: Profile dropdown shown outside nav list --%>
+                <div class="d-none d-md-flex align-items-center">
+                    <div class="dropdown">
+                        <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle me-1 fs-5"></i>
+                            <span><%= ValidationUtil.sanitizeHtml(currentUser.getName()) %></span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="../ProfileServlet"><i class="bi bi-person me-2"></i>Profil Saya</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="../LogoutServlet"><i class="bi bi-box-arrow-left me-2"></i>Logout</a></li>
+                        </ul>
+                    </div>
+                </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container py-4">
+        <h2 class="mb-4"><i class="bi bi-clock-history me-2"></i>Riwayat Ujian</h2>
+
+        <% if (error != null) { %>
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="bi bi-exclamation-triangle me-2"></i><%= ValidationUtil.sanitizeHtml(error) %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <% } %>
+
+        <% if (submissions != null && !submissions.isEmpty()) { %>
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Quiz</th>
+                                <th>Nilai</th>
+                                <th>Benar</th>
+                                <th>Waktu</th>
+                                <th>Tanggal</th>
+                                <th>Status</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% int no = 1;
+                               for (Submission sub : submissions) {
+                                   String scoreClass = sub.getScore() >= 75 ? "text-success" :
+                                                      sub.getScore() >= 60 ? "text-warning" : "text-danger";
+                            %>
+                            <tr>
+                                <td><%= no++ %></td>
+                                <td><strong><%= ValidationUtil.sanitizeHtml(sub.getQuizTitle() != null ? sub.getQuizTitle() : "Unknown Quiz") %></strong></td>
+                                <td>
+                                    <span class="<%= scoreClass %> fw-bold">
+                                        <%= sub.getScore() != null ? String.format("%.0f", sub.getScore()) : "0" %>
+                                    </span>
+                                </td>
+                                <td><%= sub.getCorrectAnswers() != null ? sub.getCorrectAnswers() : 0 %>/<%= sub.getTotalQuestions() != null ? sub.getTotalQuestions() : 0 %></td>
+                                <td><%= sub.getFormattedTimeSpent() != null ? sub.getFormattedTimeSpent() : "-" %></td>
+                                <td><%= sub.getSubmittedAt() != null ? sub.getSubmittedAt().atZone(ZoneId.systemDefault()).withZoneSameInstant(jakartaZone).format(dateFormatter) : "-" %></td>
+                                <td>
+                                    <% if ("completed".equals(sub.getStatus())) { %>
+                                    <span class="badge bg-success">Selesai</span>
+                                    <% } else if ("timeout".equals(sub.getStatus())) { %>
+                                    <span class="badge bg-warning">Waktu Habis</span>
+                                    <% } else { %>
+                                    <span class="badge bg-secondary">In Progress</span>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <a href="../ExamServlet?action=result&submissionId=<%= sub.getId() %>"
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye me-1"></i>Detail
+                                    </a>
+                                </td>
+                            </tr>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Statistics -->
+        <div class="row mt-4">
+            <div class="col-md-4">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h3 class="text-primary"><%= submissions.size() %></h3>
+                        <p class="text-muted mb-0">Total Quiz Dikerjakan</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h3 class="text-success">
+                            <%= String.format("%.0f", submissions.stream()
+                                .mapToDouble(Submission::getScore)
+                                .average()
+                                .orElse(0)) %>
+                        </h3>
+                        <p class="text-muted mb-0">Rata-rata Nilai</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h3 class="text-info">
+                            <%= String.format("%.0f", submissions.stream()
+                                .mapToDouble(Submission::getScore)
+                                .max()
+                                .orElse(0)) %>
+                        </h3>
+                        <p class="text-muted mb-0">Nilai Tertinggi</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <% } else { %>
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-clock-history display-1 text-muted mb-3 d-block"></i>
+                <h5 class="text-muted">Belum ada riwayat ujian</h5>
+                <p class="text-muted">Mulai mengerjakan quiz untuk melihat riwayat di sini.</p>
+                <a href="../ExamServlet?action=list" class="btn btn-primary">
+                    <i class="bi bi-journal-text me-1"></i>Lihat Quiz Tersedia
+                </a>
+            </div>
+        </div>
+        <% } %>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-light py-3 mt-auto">
+        <div class="container text-center">
+            <span class="text-muted">&copy; 2026 Exatuy. All rights reserved.</span>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Google Drive Modal -->
+    <% if (hasSafeGdriveLink) { %>
+    <div class="modal fade" id="gdriveModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-danger text-white border-0">
+                    <h5 class="modal-title">
+                        <i class="bi bi-google me-2"></i>Google Drive - Pengumpulan Tugas
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center py-4">
+                    <div class="mb-4">
+                        <div class="bg-danger bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center"
+                             style="width: 80px; height: 80px;">
+                            <i class="bi bi-folder2-open text-danger" style="font-size: 2.5rem;"></i>
+                        </div>
+                    </div>
+                    <h5 class="mb-3">Folder Pengumpulan Tugas & Feedback</h5>
+                    <p class="text-muted mb-4">
+                        Ini adalah folder Google Drive pribadi Anda untuk:
+                    </p>
+                    <div class="text-start bg-light p-3 rounded mb-4">
+                        <ul class="mb-0">
+                            <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Mengumpulkan tugas dan assignment</li>
+                            <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Menerima feedback dari mentor</li>
+                            <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Melihat hasil review dan nilai</li>
+                            <li><i class="bi bi-check-circle text-success me-2"></i>Dokumen pembelajaran lainnya</li>
+                        </ul>
+                    </div>
+                    <div class="alert alert-info text-start mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <strong>Catatan:</strong> Pastikan Anda sudah login dengan akun Google yang terdaftar untuk mengakses folder ini.
+                    </div>
+                </div>
+                <div class="modal-footer border-0 bg-light">
+                    <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">
+                        <i class="bi bi-x-lg me-1"></i>Tutup
+                    </button>
+                    <a href="<%= ValidationUtil.sanitizeHtml(gdriveLink) %>" target="_blank" rel="noopener noreferrer" class="btn btn-danger px-4">
+                        <i class="bi bi-box-arrow-up-right me-1"></i>Buka Google Drive
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <% } %>
+</body>
+</html>

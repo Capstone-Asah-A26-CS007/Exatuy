@@ -1,0 +1,1131 @@
+/* ============================================================
+   EXATUY — HAND-DRAWN 2D THEME
+   Gaya: sketsa tangan, kertas, doodle, animasi 2D
+   Dimuat SETELAH style.css → menimpa hanya lapisan visual,
+   properti layout (display/position/grid) dibiarkan utuh.
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Caveat:wght@500;700&family=Architects+Daughter&display=swap');
+
+:root {
+    /* Palet krayon / spidol */
+    --hd-ink:        #2b2b2b;
+    --hd-ink-soft:   #4a4a4a;
+    --hd-paper:      #fdf9f0;
+    --hd-paper-2:    #f7f1e3;
+    --hd-blue:       #3d7ebd;
+    --hd-blue-soft:  #cfe4f5;
+    --hd-green:      #5ea86a;
+    --hd-green-soft: #d6eede;
+    --hd-orange:     #e8a33d;
+    --hd-orange-soft:#fbebcf;
+    --hd-purple:     #8f7cc9;
+    --hd-purple-soft:#e3ddf3;
+    --hd-red:        #d15b5b;
+    --hd-red-soft:   #f7dada;
+
+    --hd-line: 2.5px;
+    --hd-shadow: 4px 4px 0 rgba(43,43,43,.18);
+    --hd-shadow-sm: 2px 2px 0 rgba(43,43,43,.15);
+    --hd-shadow-lg: 6px 6px 0 rgba(43,43,43,.16);
+
+    /* Bingkai tidak beraturan = efek goresan tangan */
+    --hd-r1: 255px 15px 225px 15px / 15px 225px 15px 255px;
+    --hd-r2: 15px 225px 15px 255px / 255px 15px 225px 15px;
+    --hd-r3: 125px 10px 145px 12px / 12px 145px 10px 125px;
+    --hd-r-pill: 160px 25px 150px 25px / 25px 150px 25px 160px;
+
+    --hd-font: 'Patrick Hand', 'Comic Sans MS', cursive, sans-serif;
+    --hd-font-head: 'Architects Daughter', 'Patrick Hand', cursive;
+    --hd-font-script: 'Caveat', 'Patrick Hand', cursive;
+}
+
+/* ============================================================
+   1. KERTAS & TIPOGRAFI
+   ============================================================ */
+
+body {
+    font-family: var(--hd-font) !important;
+    font-size: 17px;
+    color: var(--hd-ink);
+    background-color: var(--hd-paper) !important;
+    /* Tekstur kertas berbutir */
+    background-image:
+        radial-gradient(rgba(43,43,43,.035) 1px, transparent 1px),
+        radial-gradient(rgba(43,43,43,.025) 1px, transparent 1px);
+    background-size: 22px 22px, 22px 22px;
+    background-position: 0 0, 11px 11px;
+    letter-spacing: .2px;
+}
+
+h1, h2, h3, h4, h5, h6,
+.h1, .h2, .h3, .h4, .h5, .h6,
+.display-1, .display-2, .display-3, .display-4, .display-5 {
+    font-family: var(--hd-font-head) !important;
+    color: var(--hd-ink) !important;
+    letter-spacing: .3px;
+}
+
+/* Garis bawah ala stabilo/spidol */
+h2::after, .page-header h1::after {
+    content: '';
+    display: block;
+    width: 88px;
+    height: 7px;
+    margin-top: 6px;
+    background: var(--hd-orange);
+    border-radius: var(--hd-r3);
+    opacity: .55;
+}
+
+.lead, .text-muted, small, .small {
+    font-family: var(--hd-font) !important;
+}
+
+a { color: var(--hd-blue) !important; text-decoration-style: dashed; text-underline-offset: 3px; }
+a:hover { color: var(--hd-orange) !important; }
+
+.text-primary   { color: var(--hd-blue)   !important; }
+.text-success   { color: var(--hd-green)  !important; }
+.text-warning   { color: var(--hd-orange) !important; }
+.text-danger    { color: var(--hd-red)    !important; }
+.text-info      { color: var(--hd-purple) !important; }
+.text-muted     { color: var(--hd-ink-soft) !important; }
+
+/* ============================================================
+   2. KOMPONEN BERTEPI GORESAN TANGAN
+   ============================================================ */
+
+.card,
+.stat-card,
+.admin-stat-card,
+.quiz-card,
+.quota-card,
+.invoice-card,
+.presensi-card,
+.chart-container,
+.filter-bar,
+.settings-section,
+.testimonial-card {
+    background: #fffef9 !important;
+    border: var(--hd-line) solid var(--hd-ink) !important;
+    border-radius: var(--hd-r1) !important;
+    box-shadow: var(--hd-shadow) !important;
+    transition: transform .18s ease, box-shadow .18s ease;
+}
+
+/* Kartu selang-seling bentuk bingkainya */
+.card:nth-of-type(even),
+.stat-card:nth-of-type(even),
+.quiz-card:nth-of-type(even) {
+    border-radius: var(--hd-r2) !important;
+}
+
+.card:hover,
+.stat-card:hover,
+.quiz-card:hover,
+.quota-card:hover {
+    transform: translate(-2px, -3px) rotate(-.5deg) !important;
+    box-shadow: var(--hd-shadow-lg) !important;
+}
+
+.card-header {
+    background: var(--hd-paper-2) !important;
+    border-bottom: var(--hd-line) dashed var(--hd-ink) !important;
+    font-family: var(--hd-font-head) !important;
+    font-weight: 700;
+    color: var(--hd-ink) !important;
+}
+
+.card-header-primary {
+    background: var(--hd-blue) !important;
+    color: #fff !important;
+    border-bottom: var(--hd-line) solid var(--hd-ink) !important;
+}
+
+/* ============================================================
+   3. TOMBOL
+   ============================================================ */
+
+.btn {
+    font-family: var(--hd-font-head) !important;
+    font-weight: 700;
+    letter-spacing: .3px;
+    border: var(--hd-line) solid var(--hd-ink) !important;
+    border-radius: var(--hd-r-pill) !important;
+    box-shadow: var(--hd-shadow-sm) !important;
+    transition: transform .14s ease, box-shadow .14s ease;
+}
+
+.btn:hover {
+    transform: translate(-2px, -2px) rotate(-1deg) !important;
+    box-shadow: 4px 4px 0 rgba(43,43,43,.22) !important;
+}
+
+.btn:active {
+    transform: translate(1px, 1px) !important;
+    box-shadow: 1px 1px 0 rgba(43,43,43,.2) !important;
+}
+
+.btn-primary   { background: var(--hd-blue)   !important; color: #fff !important; }
+.btn-success   { background: var(--hd-green)  !important; color: #fff !important; }
+.btn-warning   { background: var(--hd-orange) !important; color: var(--hd-ink) !important; }
+.btn-danger    { background: var(--hd-red)    !important; color: #fff !important; }
+.btn-secondary { background: #e7e1d3        !important; color: var(--hd-ink) !important; }
+
+.btn-outline-primary {
+    background: transparent !important;
+    color: var(--hd-blue) !important;
+    border-color: var(--hd-blue) !important;
+}
+.btn-outline-primary:hover { background: var(--hd-blue-soft) !important; }
+
+.btn-outline-secondary {
+    background: transparent !important;
+    color: var(--hd-ink) !important;
+    border-color: var(--hd-ink) !important;
+}
+.btn-outline-secondary:hover { background: var(--hd-paper-2) !important; }
+
+.btn-sm { border-width: 2px !important; }
+
+/* ============================================================
+   4. BADGE / LABEL
+   ============================================================ */
+
+.badge {
+    font-family: var(--hd-font) !important;
+    font-weight: 700;
+    border: 1.8px solid var(--hd-ink) !important;
+    border-radius: var(--hd-r-pill) !important;
+    padding: .35em .8em;
+    transform: rotate(-1deg);
+    color: var(--hd-ink) !important;
+}
+
+.badge-primary, .badge-info      { background: var(--hd-blue-soft)   !important; }
+.badge-success                   { background: var(--hd-green-soft)  !important; }
+.badge-warning                   { background: var(--hd-orange-soft) !important; }
+.badge-danger                    { background: var(--hd-red-soft)    !important; }
+.badge-secondary                 { background: #e7e1d3              !important; }
+.bg-primary   { background: var(--hd-blue)   !important; }
+.bg-success   { background: var(--hd-green)  !important; }
+.bg-warning   { background: var(--hd-orange) !important; color: var(--hd-ink) !important; }
+.bg-danger    { background: var(--hd-red)    !important; }
+.bg-info      { background: var(--hd-purple) !important; }
+.bg-light     { background: var(--hd-paper-2) !important; }
+.bg-secondary { background: #d8d2c4 !important; color: var(--hd-ink) !important; }
+
+/* ============================================================
+   5. FORM
+   ============================================================ */
+
+.form-control, .form-select, textarea.form-control, .input-group-text {
+    font-family: var(--hd-font) !important;
+    font-size: 17px;
+    background: #fffef9 !important;
+    border: var(--hd-line) solid var(--hd-ink) !important;
+    border-radius: var(--hd-r3) !important;
+    box-shadow: inset 2px 2px 0 rgba(43,43,43,.06) !important;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--hd-blue) !important;
+    box-shadow: 3px 3px 0 rgba(61,126,189,.3) !important;
+    outline: none;
+}
+
+.form-label { font-family: var(--hd-font-head) !important; font-weight: 700; }
+.form-text  { font-family: var(--hd-font) !important; color: var(--hd-ink-soft) !important; }
+.form-check-input { border: 2px solid var(--hd-ink) !important; }
+.form-check-input:checked { background-color: var(--hd-green) !important; border-color: var(--hd-ink) !important; }
+
+/* ============================================================
+   6. TABEL
+   ============================================================ */
+
+.table {
+    font-family: var(--hd-font) !important;
+    border-color: var(--hd-ink) !important;
+}
+
+.table th {
+    font-family: var(--hd-font-head) !important;
+    background: var(--hd-paper-2) !important;
+    border-bottom: var(--hd-line) solid var(--hd-ink) !important;
+    color: var(--hd-ink) !important;
+}
+
+.table td, .table th { border-color: rgba(43,43,43,.25) !important; }
+
+.table-hover tbody tr:hover { background: var(--hd-orange-soft) !important; }
+
+/* ============================================================
+   7. NAVBAR (halaman user)
+   PENTING: navbar memakai .navbar-dark + .bg-primary, jadi teks
+   HARUS terang. Jangan pakai --hd-ink di sini (gelap di atas gelap).
+   ============================================================ */
+
+.navbar.bg-primary,
+nav.navbar {
+    background: var(--hd-blue) !important;
+    border-bottom: var(--hd-line) solid var(--hd-ink) !important;
+    box-shadow: 0 4px 0 rgba(43,43,43,.15) !important;
+}
+
+.navbar-brand {
+    font-family: var(--hd-font-head) !important;
+    font-weight: 700;
+    letter-spacing: .5px;
+    color: #fffef9 !important;
+}
+
+.navbar-brand i { color: #fffef9 !important; }
+
+/* Teks menu navbar: putih, dengan latar tinta saat aktif/hover */
+.navbar .nav-link {
+    font-family: var(--hd-font) !important;
+    font-weight: 600;
+    color: #fffef9 !important;
+    border-radius: var(--hd-r-pill);
+    margin: 2px 3px;
+    padding: .45rem .85rem !important;
+    text-shadow: 1px 1px 0 rgba(43,43,43,.35);
+    transition: background .16s ease, transform .16s ease;
+}
+
+.navbar .nav-link:hover,
+.navbar .nav-link.active {
+    color: var(--hd-ink) !important;
+    background: #fffef9 !important;
+    border: 2px solid var(--hd-ink);
+    text-shadow: none;
+    transform: rotate(-1deg);
+}
+
+.navbar .nav-link i { color: inherit !important; }
+
+/* Mengganti garis bawah lama dengan latar penuh (lebih terbaca) */
+.navbar .nav-link::after { display: none !important; }
+
+.navbar .navbar-toggler {
+    border: 2px solid #fffef9 !important;
+    border-radius: var(--hd-r3) !important;
+}
+
+.navbar .navbar-toggler-icon {
+    filter: brightness(0) invert(1);
+}
+
+/* Nama user di dropdown kanan navbar */
+.navbar .dropdown-toggle,
+.navbar .dropdown-toggle span,
+.navbar .dropdown-toggle i {
+    color: #fffef9 !important;
+    font-family: var(--hd-font) !important;
+    font-weight: 600;
+}
+
+.navbar .dropdown-menu {
+    border: var(--hd-line) solid var(--hd-ink) !important;
+    border-radius: var(--hd-r3) !important;
+    box-shadow: var(--hd-shadow) !important;
+    background: #fffef9 !important;
+}
+
+.navbar .dropdown-item {
+    font-family: var(--hd-font) !important;
+    color: var(--hd-ink) !important;
+}
+
+.navbar .dropdown-item:hover {
+    background: var(--hd-orange-soft) !important;
+    color: var(--hd-ink) !important;
+}
+
+/* Badge di dalam navbar (jumlah chat belum dibaca) */
+.navbar .badge {
+    background: var(--hd-red) !important;
+    color: #fff !important;
+    border: 1.5px solid #fffef9 !important;
+    text-shadow: none;
+}
+
+/* ============================================================
+   8. SIDEBAR (halaman admin)
+   ============================================================ */
+
+.sidebar {
+    background: var(--hd-blue) !important;
+    border-right: var(--hd-line) solid var(--hd-ink) !important;
+    box-shadow: 4px 0 0 rgba(43,43,43,.12) !important;
+}
+
+.sidebar .sidebar-brand {
+    font-family: var(--hd-font-head) !important;
+    font-weight: 700;
+    border-bottom: var(--hd-line) dashed rgba(255,255,255,.5) !important;
+}
+
+.sidebar .sidebar-menu li a {
+    font-family: var(--hd-font) !important;
+    font-weight: 600;
+    font-size: 16px;
+    /* WAJIB !important: aturan global `a { color: var(--hd-blue) !important }`
+       di bagian atas file ini akan menimpa warna putih bawaan style.css,
+       dan biru-di-atas-biru membuat menu tak terlihat. */
+    color: #fffef9 !important;
+    border-radius: var(--hd-r-pill);
+    margin: 2px 8px;
+    text-shadow: 1px 1px 0 rgba(43,43,43,.3);
+    transition: transform .15s ease, background .15s ease, color .15s ease;
+}
+
+.sidebar .sidebar-menu li a i { color: inherit !important; }
+
+.sidebar .sidebar-menu li a:hover,
+.sidebar .sidebar-menu li a.active {
+    background: #fffef9 !important;
+    color: var(--hd-ink) !important;
+    text-shadow: none;
+    border-left: none !important;
+    transform: translateX(5px) rotate(-.7deg);
+}
+
+.sidebar .sidebar-menu li a:hover i,
+.sidebar .sidebar-menu li a.active i { color: var(--hd-ink) !important; }
+
+/* Logout tetap merah agar menonjol, dengan latar terang saat hover */
+.sidebar .sidebar-menu li a.text-danger { color: #ffd6d6 !important; }
+.sidebar .sidebar-menu li a.text-danger:hover {
+    background: var(--hd-red) !important;
+    color: #fff !important;
+}
+
+.sidebar .sidebar-menu li.sidebar-heading {
+    font-family: var(--hd-font-head) !important;
+    letter-spacing: 1.5px;
+    color: rgba(255,255,255,.75) !important;
+}
+
+.sidebar-footer { border-top: var(--hd-line) dashed rgba(255,255,255,.4) !important; }
+
+.sidebar-toggle {
+    border: var(--hd-line) solid var(--hd-ink) !important;
+    border-radius: var(--hd-r3) !important;
+    box-shadow: var(--hd-shadow-sm) !important;
+    background: #fffef9 !important;
+}
+
+/* ============================================================
+   9. PENGALIHAN WARNA TEMA LAMA → KRAYON
+   ============================================================ */
+
+.auth-page {
+    background: var(--hd-blue) !important;
+    background-image:
+        radial-gradient(rgba(255,255,255,.10) 1.5px, transparent 1.5px) !important;
+    background-size: 26px 26px !important;
+}
+
+.auth-card, .auth-page .card {
+    border: var(--hd-line) solid var(--hd-ink) !important;
+    border-radius: var(--hd-r1) !important;
+    box-shadow: 8px 8px 0 rgba(43,43,43,.3) !important;
+}
+
+.auth-header {
+    background: var(--hd-orange) !important;
+    border-bottom: var(--hd-line) solid var(--hd-ink) !important;
+    color: var(--hd-ink) !important;
+}
+
+.auth-header h2 { color: var(--hd-ink) !important; }
+
+.progress { border: 2px solid var(--hd-ink); border-radius: 20px; background: #fffef9; height: 14px; }
+.progress-bar { border-radius: 20px; }
+.progress-bar.bg-success { background: var(--hd-green) !important; }
+.progress-bar.bg-warning { background: var(--hd-orange) !important; }
+
+.empty-state i { color: var(--hd-orange) !important; opacity: .5; }
+.empty-state h3 { font-family: var(--hd-font-head) !important; }
+
+.modal-content {
+    border: var(--hd-line) solid var(--hd-ink) !important;
+    border-radius: var(--hd-r1) !important;
+    box-shadow: 10px 10px 0 rgba(43,43,43,.25) !important;
+    background: #fffef9 !important;
+}
+
+.modal-header {
+    background: var(--hd-blue) !important;
+    border-bottom: var(--hd-line) solid var(--hd-ink) !important;
+}
+
+.alert {
+    border: var(--hd-line) solid var(--hd-ink) !important;
+    border-radius: var(--hd-r3) !important;
+    box-shadow: var(--hd-shadow-sm) !important;
+    font-family: var(--hd-font) !important;
+    font-weight: 600;
+}
+
+.alert-success { background: var(--hd-green-soft)  !important; color: var(--hd-ink) !important; }
+.alert-danger  { background: var(--hd-red-soft)    !important; color: var(--hd-ink) !important; }
+.alert-warning { background: var(--hd-orange-soft) !important; color: var(--hd-ink) !important; }
+.alert-info    { background: var(--hd-blue-soft)   !important; color: var(--hd-ink) !important; }
+
+/* ============================================================
+   10. ANIMASI 2D HAND-DRAWN
+   ============================================================ */
+
+/* --- 10.1 Muncul seperti digambar (sketch-in) --- */
+@keyframes hd-sketch-in {
+    0%   { opacity: 0; transform: translateY(14px) rotate(-2deg) scale(.97);
+           filter: blur(1.5px); clip-path: inset(0 100% 0 0); }
+    60%  { opacity: 1; filter: blur(0); clip-path: inset(0 0 0 0); }
+    100% { opacity: 1; transform: translateY(0) rotate(0) scale(1); clip-path: inset(0 0 0 0); }
+}
+
+.hd-sketch-in { animation: hd-sketch-in .55s cubic-bezier(.22,.9,.28,1) both; }
+
+/* --- 10.2 Goyangan pensil (wobble) --- */
+@keyframes hd-wobble {
+    0%,100% { transform: rotate(0deg) translateX(0); }
+    25%     { transform: rotate(-1.6deg) translateX(-2px); }
+    75%     { transform: rotate(1.6deg) translateX(2px); }
+}
+
+.hd-wobble:hover { animation: hd-wobble .45s ease-in-out; }
+
+/* --- 10.3 Goyang cepat (jiggle) saat diklik --- */
+@keyframes hd-jiggle {
+    0%,100% { transform: translate(0,0) rotate(0); }
+    20%     { transform: translate(-2px,1px) rotate(-2deg); }
+    40%     { transform: translate(2px,-1px) rotate(2deg); }
+    60%     { transform: translate(-1px,2px) rotate(-1deg); }
+    80%     { transform: translate(1px,-2px) rotate(1deg); }
+}
+
+.hd-jiggle { animation: hd-jiggle .4s ease-in-out; }
+
+/* --- 10.4 Menggambar garis (draw-line) --- */
+@keyframes hd-draw-line {
+    from { stroke-dashoffset: 400; }
+    to   { stroke-dashoffset: 0; }
+}
+
+/* --- 10.5 Garis bawah tergambar otomatis --- */
+.hd-underline {
+    position: relative;
+    display: inline-block;
+}
+.hd-underline::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0; bottom: -8px;
+    height: 8px;
+    background: var(--hd-orange);
+    border-radius: var(--hd-r3);
+    transform-origin: left center;
+    animation: hd-swipe .8s .3s cubic-bezier(.6,.05,.3,1) both;
+    opacity: .6;
+}
+@keyframes hd-swipe {
+    from { transform: scaleX(0) rotate(-1deg); }
+    to   { transform: scaleX(1) rotate(-1deg); }
+}
+
+/* --- 10.6 Melayang seperti doodle (float) --- */
+@keyframes hd-float {
+    0%,100% { transform: translateY(0) rotate(-1deg); }
+    50%     { transform: translateY(-9px) rotate(1.5deg); }
+}
+
+.hd-float { animation: hd-float 4.5s ease-in-out infinite; }
+
+/* --- 10.7 Pantulan doodle (bounce) --- */
+@keyframes hd-bounce {
+    0%,100% { transform: translateY(0) scale(1); }
+    30%     { transform: translateY(-14px) scale(1.04) rotate(-2deg); }
+    55%     { transform: translateY(0) scale(.97); }
+    75%     { transform: translateY(-5px) scale(1.01); }
+}
+
+.hd-bounce { animation: hd-bounce .75s ease-out; }
+
+/* --- 10.8 Berputar pelan (spin doodle) --- */
+@keyframes hd-spin-slow {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+.hd-spin-slow { animation: hd-spin-slow 14s linear infinite; }
+
+/* --- 10.9 Denyut tanda tangan (pulse) --- */
+@keyframes hd-pulse {
+    0%,100% { transform: scale(1); }
+    50%     { transform: scale(1.035) rotate(.6deg); }
+}
+.hd-pulse { animation: hd-pulse 2.2s ease-in-out infinite; }
+
+/* --- 10.10 Ikon berputar saat hover --- */
+.hd-icon-spin:hover i { animation: hd-spin-slow 1.1s linear; }
+
+/* --- 10.11 Efek kertas terangkat saat hover kartu --- */
+@keyframes hd-lift {
+    from { transform: translate(0,0) rotate(0); box-shadow: var(--hd-shadow); }
+    to   { transform: translate(-4px,-5px) rotate(-1.2deg); box-shadow: 10px 11px 0 rgba(43,43,43,.16); }
+}
+
+/* --- 10.12 Guncangan pensil (pencil shake) untuk peringatan --- */
+@keyframes hd-shake {
+    0%,100% { transform: translateX(0) rotate(0); }
+    25%     { transform: translateX(-3px) rotate(-2deg); }
+    50%     { transform: translateX(3px) rotate(2deg); }
+    75%     { transform: translateX(-2px) rotate(-1deg); }
+}
+.hd-shake { animation: hd-shake .45s ease-in-out; }
+
+/* --- 10.13 Tanda centang tergambar --- */
+@keyframes hd-check-draw {
+    from { stroke-dashoffset: 60; opacity: .2; }
+    to   { stroke-dashoffset: 0; opacity: 1; }
+}
+
+/* --- 10.14 Hitungan berjalan (count-up feel) --- */
+.stat-value, .stat-number, .quota-value {
+    font-family: var(--hd-font-head) !important;
+    color: var(--hd-ink) !important;
+}
+
+/* ============================================================
+   11. HIASAN DOODLE
+   ============================================================ */
+
+/* Coretan lingkaran di sekitar teks */
+.hd-circled {
+    position: relative;
+    display: inline-block;
+    padding: .1em .35em;
+}
+.hd-circled::before {
+    content: '';
+    position: absolute;
+    inset: -6px -10px;
+    border: 2.5px solid var(--hd-red);
+    border-radius: 50% 45% 55% 48% / 48% 55% 45% 52%;
+    transform: rotate(-2deg);
+    pointer-events: none;
+    opacity: .75;
+}
+
+/* Stabilo kuning */
+.hd-highlight {
+    background: linear-gradient(100deg, transparent 12%, var(--hd-orange-soft) 12%, var(--hd-orange-soft) 88%, transparent 88%);
+    padding: .05em .2em;
+    border-radius: 6px;
+}
+
+/* Garis putus-putus pemisah */
+.hd-divider {
+    border: none;
+    border-top: var(--hd-line) dashed var(--hd-ink);
+    opacity: .45;
+    margin: 1.25rem 0;
+}
+
+/* Panah coretan */
+.hd-arrow::after {
+    content: '↝';
+    font-family: var(--hd-font-script);
+    font-size: 2rem;
+    color: var(--hd-orange);
+    margin-left: .5rem;
+    display: inline-block;
+    animation: hd-float 3s ease-in-out infinite;
+}
+
+/* Catatan tempel (sticky note) */
+.hd-note {
+    background: #fff9c4;
+    border: var(--hd-line) solid var(--hd-ink);
+    border-radius: var(--hd-r3);
+    box-shadow: var(--hd-shadow-sm);
+    padding: 1rem 1.15rem;
+    transform: rotate(-1.2deg);
+    font-family: var(--hd-font-script);
+    font-size: 1.25rem;
+}
+
+/* Avatar sketsa */
+.user-avatar, .avatar-sm, .presensi-avatar {
+    border: var(--hd-line) solid var(--hd-ink) !important;
+    box-shadow: var(--hd-shadow-sm);
+}
+
+/* Kotak kuota & invoice */
+.quota-progress, .quota-progress-bar { border-radius: 20px !important; }
+.quota-progress { border: 2px solid var(--hd-ink) !important; background: #fffef9 !important; }
+.quota-card.warning { border-color: var(--hd-orange) !important; }
+.quota-card.danger  { border-color: var(--hd-red) !important; }
+
+.invoice-status, .status-badge, .expense-tag {
+    border: 1.8px solid var(--hd-ink) !important;
+    border-radius: var(--hd-r-pill) !important;
+    color: var(--hd-ink) !important;
+    font-family: var(--hd-font) !important;
+}
+
+/* ============================================================
+   12. HALAMAN DEPAN (landing)
+   ============================================================ */
+
+.hero { background: var(--hd-blue-soft) !important; }
+.hero-shape-1, .hero-shape-2, .hero-shape-3 { opacity: .12 !important; }
+
+.hero-card {
+    border: var(--hd-line) solid var(--hd-ink) !important;
+    border-radius: var(--hd-r1) !important;
+    box-shadow: var(--hd-shadow) !important;
+    background: #fffef9 !important;
+}
+
+.floating-card {
+    border: var(--hd-line) solid var(--hd-ink) !important;
+    border-radius: var(--hd-r3) !important;
+    box-shadow: var(--hd-shadow-sm) !important;
+    background: #fffef9 !important;
+}
+
+.feature-card {
+    background: #fffef9 !important;
+    border: var(--hd-line) solid var(--hd-ink) !important;
+    border-radius: var(--hd-r2) !important;
+    box-shadow: var(--hd-shadow) !important;
+}
+
+.feature-icon {
+    border: var(--hd-line) solid var(--hd-ink) !important;
+    border-radius: var(--hd-r3) !important;
+    box-shadow: var(--hd-shadow-sm) !important;
+}
+
+.section-label, .hero-badge {
+    border: 2px solid var(--hd-ink) !important;
+    border-radius: var(--hd-r-pill) !important;
+    background: #fffef9 !important;
+    color: var(--hd-ink) !important;
+    font-family: var(--hd-font-head) !important;
+    box-shadow: var(--hd-shadow-sm);
+}
+
+.btn-primary-lg, .cta-button {
+    background: var(--hd-blue) !important;
+    color: #fff !important;
+    border: var(--hd-line) solid var(--hd-ink) !important;
+    border-radius: var(--hd-r-pill) !important;
+    box-shadow: var(--hd-shadow) !important;
+    font-family: var(--hd-font-head) !important;
+}
+
+.btn-outline-lg {
+    background: transparent !important;
+    color: var(--hd-ink) !important;
+    border: var(--hd-line) solid var(--hd-ink) !important;
+    border-radius: var(--hd-r-pill) !important;
+}
+
+.stats { background: var(--hd-ink) !important; }
+.cta { background: var(--hd-orange-soft) !important; }
+.cta-card {
+    border: var(--hd-line) solid var(--hd-ink) !important;
+    border-radius: var(--hd-r1) !important;
+    box-shadow: var(--hd-shadow-lg) !important;
+    background: #fffef9 !important;
+}
+
+.footer {
+    background: var(--hd-ink) !important;
+    border-top: var(--hd-line) solid var(--hd-ink) !important;
+    font-family: var(--hd-font) !important;
+}
+
+.social-link {
+    border: 2px solid rgba(255,255,255,.5) !important;
+    border-radius: var(--hd-r3) !important;
+}
+
+/* ============================================================
+   13. AKSESIBILITAS
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+    .hd-sketch-in, .hd-float, .hd-pulse, .hd-spin-slow,
+    .hd-underline::after, .hd-wobble:hover {
+        animation: none !important;
+    }
+    .card, .btn, .stat-card { transition: none !important; }
+}
+
+/* Cetak: hilangkan animasi & bayangan */
+@media print {
+    body { background: #fff !important; }
+    .card, .btn, .alert { box-shadow: none !important; transform: none !important; }
+    * { animation: none !important; }
+}
+
+/* ============================================================
+   14. LANDING PAGE OVERRIDES
+   index.jsp punya blok <style> inline 700+ baris yang dideklarasikan
+   SEBELUM file ini, tapi kelas-kelas di bawah perlu dipaksa menang.
+   ============================================================ */
+
+html body .hero {
+    background: var(--hd-paper) !important;
+    background-image:
+        radial-gradient(rgba(43,43,43,.06) 1.5px, transparent 1.5px) !important;
+    background-size: 24px 24px !important;
+}
+
+/* Panel kertas miring di belakang hero (efek tempelan) */
+html body .hero::before {
+    content: '';
+    position: absolute;
+    top: 12%;
+    left: 4%;
+    right: 4%;
+    bottom: 10%;
+    background: #fffef9;
+    border: var(--hd-line) solid var(--hd-ink);
+    border-radius: var(--hd-r1);
+    box-shadow: var(--hd-shadow-lg);
+    transform: rotate(-.35deg);
+    z-index: 1;
+}
+
+html body .hero .container { position: relative; z-index: 2; }
+
+html body .hero-title {
+    font-family: var(--hd-font-head) !important;
+    background: none !important;
+    -webkit-text-fill-color: var(--hd-ink) !important;
+    color: var(--hd-ink) !important;
+    text-shadow: 3px 3px 0 rgba(232,163,61,.35);
+    font-size: clamp(2.1rem, 4.4vw, 3.4rem) !important;
+    line-height: 1.25 !important;
+}
+
+html body .hero-title::after {
+    content: '';
+    display: block;
+    width: 180px;
+    height: 9px;
+    margin-top: 12px;
+    background: var(--hd-orange);
+    border-radius: var(--hd-r3);
+    opacity: .6;
+}
+
+html body .hero-subtitle {
+    font-family: var(--hd-font) !important;
+    color: var(--hd-ink-soft) !important;
+    font-size: clamp(1rem, 1.6vw, 1.2rem) !important;
+}
+
+html body .hero-badge,
+html body .section-label {
+    background: #fffef9 !important;
+    border: 2px solid var(--hd-ink) !important;
+    border-radius: var(--hd-r-pill) !important;
+    color: var(--hd-ink) !important;
+    font-family: var(--hd-font-head) !important;
+    box-shadow: var(--hd-shadow-sm) !important;
+}
+
+html body .hero-badge .badge-icon {
+    background: var(--hd-orange) !important;
+    border: 1.5px solid var(--hd-ink) !important;
+}
+
+html body .hero-card,
+html body .floating-card {
+    background: #fffef9 !important;
+    border: var(--hd-line) solid var(--hd-ink) !important;
+    border-radius: var(--hd-r1) !important;
+    box-shadow: var(--hd-shadow) !important;
+}
+
+html body .hero-card-icon,
+html body .floating-card-icon {
+    border: 2px solid var(--hd-ink) !important;
+    border-radius: var(--hd-r3) !important;
+}
+
+html body .hero-card-title,
+html body .floating-card-title {
+    font-family: var(--hd-font-head) !important;
+    color: var(--hd-ink) !important;
+}
+
+html body .hero-card-text,
+html body .floating-card-text {
+    font-family: var(--hd-font) !important;
+    color: var(--hd-ink-soft) !important;
+}
+
+/* Tombol landing */
+html body .btn-primary-lg,
+html body .cta-button,
+html body .btn-login {
+    background: var(--hd-blue) !important;
+    color: #fff !important;
+    border: var(--hd-line) solid var(--hd-ink) !important;
+    border-radius: var(--hd-r-pill) !important;
+    box-shadow: var(--hd-shadow) !important;
+    font-family: var(--hd-font-head) !important;
+    font-weight: 700 !important;
+}
+
+html body .btn-primary-lg:hover,
+html body .cta-button:hover,
+html body .btn-login:hover {
+    transform: translate(-3px,-3px) rotate(-1deg) !important;
+    box-shadow: 7px 7px 0 rgba(43,43,43,.22) !important;
+    background: var(--hd-orange) !important;
+    color: var(--hd-ink) !important;
+}
+
+html body .btn-outline-lg,
+html body .btn-register {
+    background: transparent !important;
+    color: var(--hd-ink) !important;
+    border: var(--hd-line) solid var(--hd-ink) !important;
+    border-radius: var(--hd-r-pill) !important;
+    box-shadow: var(--hd-shadow-sm) !important;
+    font-family: var(--hd-font-head) !important;
+}
+
+html body .btn-outline-lg:hover,
+html body .btn-register:hover {
+    background: var(--hd-paper-2) !important;
+    color: var(--hd-ink) !important;
+    transform: translate(-2px,-2px) rotate(1deg) !important;
+}
+
+/* Section & kartu fitur landing */
+html body .section-title {
+    font-family: var(--hd-font-head) !important;
+    color: var(--hd-ink) !important;
+}
+
+html body .section-subtitle {
+    font-family: var(--hd-font) !important;
+    color: var(--hd-ink-soft) !important;
+}
+
+html body .feature-card {
+    background: #fffef9 !important;
+    border: var(--hd-line) solid var(--hd-ink) !important;
+    border-radius: var(--hd-r2) !important;
+    box-shadow: var(--hd-shadow) !important;
+}
+
+html body .feature-card:hover {
+    transform: translate(-3px,-4px) rotate(-1deg) !important;
+    box-shadow: var(--hd-shadow-lg) !important;
+    border-color: var(--hd-ink) !important;
+}
+
+html body .feature-card h5 {
+    font-family: var(--hd-font-head) !important;
+    color: var(--hd-ink) !important;
+}
+
+html body .feature-card p,
+html body .feature-list li {
+    font-family: var(--hd-font) !important;
+    color: var(--hd-ink-soft) !important;
+}
+
+html body .feature-icon {
+    border: var(--hd-line) solid var(--hd-ink) !important;
+    border-radius: var(--hd-r3) !important;
+    box-shadow: var(--hd-shadow-sm) !important;
+}
+
+/* Navbar landing */
+html body .navbar-brand {
+    font-family: var(--hd-font-head) !important;
+    background: none !important;
+    -webkit-text-fill-color: var(--hd-ink) !important;
+    color: var(--hd-ink) !important;
+}
+
+html body .nav-link {
+    font-family: var(--hd-font) !important;
+    font-weight: 600 !important;
+}
+
+/* Section gelap & CTA */
+html body .stats { background: var(--hd-ink) !important; }
+
+html body .stat-number {
+    font-family: var(--hd-font-head) !important;
+    color: #fffef9 !important;
+}
+
+html body .stat-label {
+    font-family: var(--hd-font) !important;
+    color: rgba(255,254,249,.85) !important;
+}
+
+html body .stat-icon {
+    border: 2px solid rgba(255,255,255,.45) !important;
+    border-radius: var(--hd-r3) !important;
+    color: var(--hd-orange) !important;
+}
+
+html body .cta {
+    background: var(--hd-orange-soft) !important;
+    background-image: radial-gradient(rgba(43,43,43,.05) 1.5px, transparent 1.5px) !important;
+    background-size: 24px 24px !important;
+}
+
+html body .cta-card {
+    background: #fffef9 !important;
+    border: var(--hd-line) solid var(--hd-ink) !important;
+    border-radius: var(--hd-r1) !important;
+    box-shadow: var(--hd-shadow-lg) !important;
+}
+
+html body .cta-title {
+    font-family: var(--hd-font-head) !important;
+    color: var(--hd-ink) !important;
+}
+
+html body .cta-text {
+    font-family: var(--hd-font) !important;
+    color: var(--hd-ink-soft) !important;
+}
+
+/* Footer */
+html body .footer {
+    background: var(--hd-ink) !important;
+    border-top: var(--hd-line) dashed rgba(255,255,255,.35) !important;
+}
+
+html body .footer-title {
+    font-family: var(--hd-font-head) !important;
+    color: #fffef9 !important;
+}
+
+html body .footer-links a,
+html body .footer-bottom p {
+    font-family: var(--hd-font) !important;
+    color: rgba(255,254,249,.75) !important;
+}
+
+html body .footer-links a:hover { color: var(--hd-orange) !important; }
+
+html body .social-link {
+    border: 2px solid rgba(255,255,255,.5) !important;
+    border-radius: var(--hd-r3) !important;
+}
+
+html body .social-link:hover {
+    background: var(--hd-orange) !important;
+    border-color: var(--hd-ink) !important;
+}
+
+/* Kartu testimoni (jika dipakai) */
+html body .testimonial-card {
+    background: #fffef9 !important;
+    border: var(--hd-line) solid var(--hd-ink) !important;
+    border-radius: var(--hd-r2) !important;
+    box-shadow: var(--hd-shadow) !important;
+}
+
+/* ============================================================
+   15. PEMICU ANIMASI OTOMATIS (CSS-only, tanpa JS)
+   ============================================================ */
+
+/* Kartu "digambar" saat halaman dimuat, bertahap */
+@keyframes hd-card-in {
+    0%   { opacity: 0; transform: translateY(16px) rotate(-1.5deg) scale(.98); }
+    70%  { opacity: 1; }
+    100% { opacity: 1; transform: translateY(0) rotate(0) scale(1); }
+}
+
+.card, .stat-card, .feature-card, .quiz-card,
+.quota-card, .presale-card, .invoice-card, .presensi-card {
+    animation: hd-card-in .5s cubic-bezier(.22,.9,.28,1) both;
+}
+
+.card:nth-of-type(2),  .stat-card:nth-of-type(2)  { animation-delay: .06s; }
+.card:nth-of-type(3),  .stat-card:nth-of-type(3)  { animation-delay: .12s; }
+.card:nth-of-type(4),  .stat-card:nth-of-type(4)  { animation-delay: .18s; }
+.card:nth-of-type(5),  .stat-card:nth-of-type(5)  { animation-delay: .24s; }
+.card:nth-of-type(6),  .stat-card:nth-of-type(6)  { animation-delay: .30s; }
+.card:nth-of-type(n+7)                            { animation-delay: .36s; }
+
+/* Tombol bergoyang saat ditekan */
+.btn:active,
+button:active {
+    animation: hd-jiggle .35s ease-in-out;
+}
+
+/* Ikon di dalam tombol & judul berputar pelan saat hover */
+.btn:hover > i,
+.card-header:hover > h6 > i {
+    animation: hd-spin-slow 1.4s linear;
+}
+
+/* Badge bergoyang pelan terus-menerus */
+.badge {
+    animation: hd-pulse 3.5s ease-in-out infinite;
+}
+
+/* Alert bergetar sekali saat muncul (menarik perhatian) */
+.alert {
+    animation: hd-shake .5s ease-in-out;
+}
+
+/* Baris tabel muncul berurutan */
+@keyframes hd-row-in {
+    from { opacity: 0; transform: translateX(-8px) rotate(-.4deg); }
+    to   { opacity: 1; transform: translateX(0) rotate(0); }
+}
+
+tbody tr {
+    animation: hd-row-in .32s ease-out both;
+}
+
+tbody tr:nth-child(1)  { animation-delay: .02s; }
+tbody tr:nth-child(2)  { animation-delay: .05s; }
+tbody tr:nth-child(3)  { animation-delay: .08s; }
+tbody tr:nth-child(4)  { animation-delay: .11s; }
+tbody tr:nth-child(5)  { animation-delay: .14s; }
+tbody tr:nth-child(6)  { animation-delay: .17s; }
+tbody tr:nth-child(7)  { animation-delay: .20s; }
+tbody tr:nth-child(8)  { animation-delay: .23s; }
+tbody tr:nth-child(n+9) { animation-delay: .26s; }
+
+/* Ikon statistik mengapung */
+.stat-icon, .feature-icon {
+    animation: hd-float 5s ease-in-out infinite;
+}
+
+/* Emoji/ikon di judul halaman berdenyut */
+.page-header h1 > i,
+h1 > i, h2 > i {
+    display: inline-block;
+    animation: hd-pulse 3s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .card, .stat-card, .feature-card, .quiz-card,
+    tbody tr, .badge, .alert, .stat-icon, .feature-icon,
+    .page-header h1 > i, h1 > i, h2 > i {
+        animation: none !important;
+    }
+}

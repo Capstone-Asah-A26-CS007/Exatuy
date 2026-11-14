@@ -1,0 +1,22 @@
+<%@ page import="com.examora.model.CustomPage" %>
+<%@ page import="com.examora.dao.CustomPageDAO" %>
+<%@ page import="java.util.List" %>
+<%@ page import="com.examora.util.ValidationUtil" %>
+<%
+    // Try to get custom pages from request attribute (set by servlet) or load directly
+    List<CustomPage> _customPages = (List<CustomPage>) request.getAttribute("customPages");
+    if (_customPages == null) {
+        try {
+            _customPages = new CustomPageDAO().findActive();
+        } catch (Exception e) {
+            _customPages = java.util.List.of();
+        }
+    }
+    for (CustomPage _cp : _customPages) {
+%>
+<li class="nav-item">
+    <a class="nav-link" href="<%= ValidationUtil.sanitizeHtml(_cp.getMenuLink()) %>" target="_blank" rel="noopener noreferrer">
+        <i class="<%= ValidationUtil.sanitizeHtml(_cp.getIconClass()) %> me-1"></i><%= ValidationUtil.sanitizeHtml(_cp.getMenuName()) %>
+    </a>
+</li>
+<% } %>
